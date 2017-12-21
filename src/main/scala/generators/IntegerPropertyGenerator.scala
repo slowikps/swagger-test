@@ -1,10 +1,26 @@
 package generators
 
+import io.swagger.models.parameters.{AbstractParameter, AbstractSerializableParameter, SerializableParameter}
 import io.swagger.models.properties.LongProperty
 import org.scalacheck.Gen
 
 import scala.collection.JavaConverters._
+object IntegerPropertyGenerator {
+  implicit class syntax[T](val in: T) extends AnyVal {
+    def option: Option[T] = Option(in)
+    def safeString = option.map(_.toString).getOrElse(null)
+  }
 
+  def apply[T <: AbstractSerializableParameter[T]](parameter: AbstractSerializableParameter[T]) = {
+    assert(parameter.getType == "integer", s"Trying to create integer generator for non integer type: ${parameter.getType}")
+    if(parameter.getFormat == "int64") {
+      val longProperty =  new LongProperty()
+      longProperty.setDefault(parameter.getDefault().safeString)
+//      longProperty.setEnum(parameter.getEnum.asScala.map(_.toLong).asJava)
+      //Ah that should be scala ;-/
+    }
+  }
+}
 class LongPropertyGenerator(property: LongProperty) {
 
   def generator(): Gen[Long] = {
@@ -28,7 +44,7 @@ class LongPropertyGenerator(property: LongProperty) {
         if (maxExclusive) max - 1
         else max
       }
-      Gen.choose(min, max).map(_.toLong)
+      Gen.choose(min.toLong, max.toLong)
     }
   }
 }
